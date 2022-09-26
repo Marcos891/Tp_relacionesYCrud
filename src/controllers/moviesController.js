@@ -4,6 +4,7 @@ const moment = require('moment');
 const sequelize = db.sequelize;
 const { Op } = require("sequelize");
 const { promiseImpl } = require('ejs');
+const { validationResult } = require('express-validator');
 const { error } = require('console');
 
 
@@ -64,20 +65,29 @@ const moviesController = {
             .catch(error => console.log(error))
     },
     create: function (req, res) {
-        const {title, rating, awards, length, release_date, genre_id} = req.body;
-        Movies.create({
-            title: title.trim(),
-            rating,
-            awards,
-            length,
-            release_date,
-            genre_id
-        })
-        .then(movie => {
-            console.log(movie)
-                return res.redirect('/movies')
-        })
-        .catch(error => console.log(error))
+        let errors = validationResult(req)
+        if(errors.isEmpty()){
+            const {title, rating, awards, length, release_date, genre_id} = req.body;
+            Movies.create({
+                title: title.trim(),
+                rating,
+                awards,
+                length,
+                release_date,
+                genre_id
+            })
+            .then(movie => {
+                console.log(movie)
+                    return res.redirect('/movies')
+            })
+            .catch(error => console.log(error))
+        }else{
+            Genres.findAll({})
+                .then(allGenres => {
+                    return res.render('moviesAdd', {allGenres, errors : errors.mapped()})
+                })
+                .catch(error => console.log(error))
+            }
     },
     edit: function (req, res) {
         let Movie = Movies.findByPk(req.params.id, {
@@ -125,11 +135,9 @@ const moviesController = {
     },
     destroy: function (req, res) {
         const {id} = req.params
-        Movies.destroy({
-            where: {id}
-            .then(()=>{
-               return res.redirect('/movies')
-            })
+        Movies.destroy({where:{id}})
+        .then( () => {
+          return res.redirect('/movies')
         })
         .catch(error => console.log(error))
     }

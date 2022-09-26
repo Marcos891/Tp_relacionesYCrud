@@ -21,6 +21,6 @@ app.use(express.urlencoded({ extended: false }));
 app.use('/', indexRouter);
 app.use(moviesRoutes);
 app.use(genresRoutes);
-app.use(require('./routes/actorsRoutes'))
+app.use('/actors', require('./routes/actorsRoutes'))
 
 app.listen('3001', () => console.log('Servidor corriendo en el puerto 3001'));
